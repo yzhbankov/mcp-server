@@ -1,8 +1,8 @@
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import express from 'express';
 import fs from 'fs';
 import { z } from 'zod';
+import { readFilesRecursively, queryMySQL } from './utils.ts';
 
 // Initialize MCP server
 const server = new McpServer({
@@ -86,6 +86,66 @@ registerTool(
         console.log(result.toString())
         return {
             content: [{ type: 'text', text: JSON.stringify(result.toString()) }],
+            structuredContent: result,
+        };
+    },
+);
+
+registerTool(
+    'read_dir',
+    {
+        title: 'Read directory Tool',
+        description: 'Read directory operation',
+        inputSchema: { },
+        outputSchema: { result: z.string() },
+    },
+    async () => {
+        const result: string[] = await readFilesRecursively('/Users/yzhbankov/Documents/petprojects/mcp-server')
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result.toString()) }],
+            structuredContent: result,
+        };
+    },
+);
+
+registerTool(
+    'db_users',
+    {
+        title: 'DB users Tool',
+        description: 'DB users operation',
+        inputSchema: { },
+        outputSchema: { result: z.string() },
+    },
+    async () => {
+        const result: Record<string, any>[] = await queryMySQL(
+            {password: 'dr2_prod', user: 'dr2_prod', host: 'localhost', database: 'dr2_prod'},
+            'SELECT uid, email, role, created_at, updated_at, last_sign_in_at FROM users'
+        )
+
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result.map(obj => JSON.stringify(obj))) }],
+            structuredContent: result,
+        };
+    },
+);
+
+registerTool(
+    'sql_query',
+    {
+        title: 'SQL Query Tool',
+        description: 'SQL query operation',
+        inputSchema: { query: z.string() },
+        outputSchema: { result: z.string() },
+    },
+    async ({ query }: {query: string}) => {
+        console.log(query);
+        const result: Record<string, any>[] = await queryMySQL(
+            {password: 'dr2_prod', user: 'dr2_prod', host: 'localhost', database: 'dr2_prod'},
+            query
+        )
+
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result.map(obj => JSON.stringify(obj))) }],
             structuredContent: result,
         };
     },
