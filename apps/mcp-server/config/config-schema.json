@@ -1,0 +1,3 @@
+{
+  "serverPort": ["required", "positive_integer"]
+}

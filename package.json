@@ -1,26 +1,40 @@
 {
   "name": "mcp-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "tsx src/server.ts"
-  },
   "type": "module",
-  "author": "yzhbankov",
-  "license": "MIT",
+  "engines": {
+    "node": ">=25.0.0",
+    "npm": ">=11.6.2"
+  },
+  "scripts": {
+    "clean": "lerna run clean && rimraf node_modules",
+    "start:server": "cd apps/mcp-server && yarn start",
+    "start:client": "cd apps/mcp-client && yarn start",
+    "reset": "yarn run clean && yarn install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yzhbankov/mcp-server.git"
+  },
+  "workspaces": [
+    "apps/mcp-server",
+    "apps/mcp-client"
+  ],
+  "private": true,
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.2",
-    "@types/axios": "^0.14.4",
-    "@types/express": "^5.0.4",
-    "axios": "^1.12.2",
+    "axios": "^1.13.0",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mysql2": "^3.15.3",
-    "zod": "^3.25.76"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/express": "^5.0.5",
     "@types/node": "^24.9.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
-  }
+  },
+  "license": "UNLICENSED"
 }
