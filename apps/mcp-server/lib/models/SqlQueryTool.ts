@@ -15,7 +15,6 @@ export const metadata: ResourceMetadata = {
 }
 
 export const handler: ToolHandler = async ({ query }: {query: string}) => {
-    console.log(query);
     const result: Record<string, any>[] = await queryMySQL(
         {password: 'dr2_prod', user: 'dr2_prod', host: 'localhost', database: 'dr2_prod'},
         query

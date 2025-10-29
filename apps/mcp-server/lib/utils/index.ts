@@ -17,7 +17,7 @@ export async function queryMySQL<T = any>(
 ): Promise<T[]> {
     const connection = await mysql.createConnection(config);
     try {
-        const [rows] = await connection.execute<T[]>(sql, params);
+        const [rows] = await connection.execute<any>(sql, params);
         return rows;
     } finally {
         await connection.end();

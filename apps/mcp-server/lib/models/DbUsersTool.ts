@@ -1,4 +1,4 @@
-import {z} from "zod";
+import {z} from 'zod';
 import {ResourceMetadata} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {queryMySQL} from '../utils';
 

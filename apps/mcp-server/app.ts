@@ -1,8 +1,8 @@
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import {McpServer, ResourceTemplate} from '@modelcontextprotocol/sdk/server/mcp.js';
 import express from 'express';
 import fs from 'fs';
-import { z } from 'zod';
-import { readFilesRecursively, queryMySQL } from './utils.ts';
+import {z} from 'zod';
+import {readFilesRecursively, queryMySQL} from './lib/utils';
 
 // Initialize MCP server
 const server = new McpServer({

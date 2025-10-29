@@ -1,37 +1,24 @@
-import { McpServer, ResourceTemplate, ResourceMetadata } from '@modelcontextprotocol/sdk/server/mcp.js';
+import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import express from 'express';
-import * as Add from './Add';
-import * as AdhocMath from './AdhocMath';
-import * as DbUsers from './DbUsers';
-import * as SqlQuery from './SqlQuery';
+import {registerTool} from './utils/registerTool';
+import {registerResource} from './utils/registerResource';
+import {AddTool, AdhocMathTool, DbUsersTool, GreetingResource, SqlQueryTool} from './models';
 
-const server = new McpServer({ name: 'demo-server', version: '1.0.0' });
+const server = new McpServer({
+    name: 'demo-server',
+    version: '1.0.0',
+});
+
+// --- Tools ---
 const tools = new Map();
 
-type ToolHandler = (...args: any[]) => Promise<any> | any;
+registerTool(server, tools)(AddTool.name, AddTool.metadata, AddTool.handler);
+registerTool(server, tools)(AdhocMathTool.name, AdhocMathTool.metadata, AdhocMathTool.handler);
+registerTool(server, tools)(DbUsersTool.name, DbUsersTool.metadata, DbUsersTool.handler);
+registerTool(server, tools)(SqlQueryTool.name, SqlQueryTool.metadata, SqlQueryTool.handler);
 
-function registerTool(name: string, meta: ResourceMetadata, handler: ToolHandler) {
-    server.registerTool(name, meta, handler);
-    tools.set(name, { name, ...meta, executor: handler });
-}
+registerResource(server)(GreetingResource.name, GreetingResource.template, GreetingResource.config, GreetingResource.callback);
 
-registerTool(Add.name, Add.metadata, Add.handler);
-registerTool(AdhocMath.name, AdhocMath.metadata, AdhocMath.handler);
-registerTool(DbUsers.name, DbUsers.metadata, DbUsers.handler);
-registerTool(SqlQuery.name, SqlQuery.metadata, SqlQuery.handler)
-
-// --- Resource ---
-server.registerResource(
-    'greeting',
-    new ResourceTemplate('greeting://{name}', { list: undefined }),
-    {
-        title: 'Greeting Resource',
-        description: 'Dynamic greeting generator',
-    },
-    async (uri, { name }) => ({
-        contents: [{ uri: uri.href, text: `Hello, ${name}!` }],
-    }),
-);
 
 // --- Express App ---
 const app = express();
