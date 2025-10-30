@@ -54,60 +54,6 @@ registerTool(
     },
 );
 
-// Adhoc Math Tool
-registerTool(
-    'ukr_math',
-    {
-        title: 'Ukr Math Tool',
-        description: 'Ukr math operation',
-        inputSchema: { a: z.number(), b: z.number() },
-        outputSchema: { result: z.number() },
-    },
-    async ({ a, b }) => {
-        const result = { result: a * b * 1000 };
-        return {
-            content: [{ type: 'text', text: JSON.stringify(result) }],
-            structuredContent: result,
-        };
-    },
-);
-
-// Adhoc Math Tool
-registerTool(
-    'read_file',
-    {
-        title: 'Read file Tool',
-        description: 'Read file operation',
-        inputSchema: { },
-        outputSchema: { result: z.string() },
-    },
-    async () => {
-        const result = fs.readFileSync('/Users/yzhbankov/Documents/petprojects/mcp-server/src/pwd.txt')
-        console.log(result.toString())
-        return {
-            content: [{ type: 'text', text: JSON.stringify(result.toString()) }],
-            structuredContent: result,
-        };
-    },
-);
-
-registerTool(
-    'read_dir',
-    {
-        title: 'Read directory Tool',
-        description: 'Read directory operation',
-        inputSchema: { },
-        outputSchema: { result: z.string() },
-    },
-    async () => {
-        const result: string[] = await readFilesRecursively('/Users/yzhbankov/Documents/petprojects/mcp-server')
-        return {
-            content: [{ type: 'text', text: JSON.stringify(result.toString()) }],
-            structuredContent: result,
-        };
-    },
-);
-
 registerTool(
     'db_users',
     {
@@ -121,6 +67,8 @@ registerTool(
             {password: 'dr2_prod', user: 'dr2_prod', host: 'localhost', database: 'dr2_prod'},
             'SELECT uid, email, role, created_at, updated_at, last_sign_in_at FROM users'
         )
+
+        console.log('result ', result);
 
         return {
             content: [{ type: 'text', text: JSON.stringify(result.map(obj => JSON.stringify(obj))) }],
@@ -151,7 +99,6 @@ registerTool(
     },
 );
 
-// --- Resource ---
 server.registerResource(
     'greeting',
     new ResourceTemplate('greeting://{name}', { list: undefined }),
@@ -181,6 +128,7 @@ app.post('/mcp', async (req, res) => {
                     inputSchema: tool.inputSchema,
                 })),
             };
+            console.log('list tools called');
             return res.json({ jsonrpc: '2.0', id, result });
         }
 
