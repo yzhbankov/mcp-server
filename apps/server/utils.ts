@@ -10,14 +10,10 @@ export interface MySQLConfig {
     port?: number;
 }
 
-export async function queryMySQL<T = any>(
-    config: MySQLConfig,
-    sql: string,
-    params: any[] = []
-): Promise<T[]> {
+export async function queryMySQL(config: MySQLConfig, sql: string, params: any[] = []): Promise<any[]> {
     const connection = await mysql.createConnection(config);
     try {
-        const [rows] = await connection.execute<T[]>(sql, params);
+        const [rows] = await connection.execute<any[]>(sql, params);
         return rows;
     } finally {
         await connection.end();

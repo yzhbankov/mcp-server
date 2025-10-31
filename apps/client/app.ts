@@ -5,7 +5,7 @@ import { z } from 'zod';
 const MCP_URL = 'http://localhost:3000/mcp';
 
 const openai = new OpenAI({
-    apiKey: 'sk-proj-xxxx' // Make sure to set this in your env
+    apiKey: 'sk-proj-xxxxx'
 });
 
 const ToolSchema = z.object({
@@ -47,6 +47,8 @@ async function getMcpTools() {
         }
     }));
 }
+
+// using sql_query check how many tables and what tables do I have in my db
 
 
 async function callChatGPT(messages: any[], tools: any[]) {
@@ -119,13 +121,13 @@ async function main() {
 
     const ask = () => {
         process.stdout.write('\nYou: ');
-        process.stdin.once('data', async (input) => {
+        process.stdin.once('data', async (input: string) => {
             const query = input.trim();
             if (query.toLowerCase() === 'exit') process.exit(0);
             try {
                 const response = await processQuery(query);
                 console.log('\n🤖 LLM:', response);
-            } catch (err) {
+            } catch (err: any) {
                 console.error('❌ Error:', err.message);
             }
             ask();

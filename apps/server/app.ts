@@ -1,11 +1,10 @@
-import {McpServer, ResourceTemplate} from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import express from 'express';
-import fs from 'fs';
-import {z} from 'zod';
-import {readFilesRecursively, queryMySQL} from './lib/utils';
+import { z } from 'zod';
+import { queryMySQL } from './utils';
 
 // Initialize MCP server
-const server = new McpServer({
+const mcpServer = new McpServer({
     name: 'demo-server',
     version: '1.0.0',
 });
@@ -13,8 +12,8 @@ const server = new McpServer({
 // --- Tools ---
 const tools = new Map();
 
-function registerTool(name, meta, handler) {
-    server.registerTool(name, meta, handler);
+function registerTool(name: string, meta: any, handler: any) {
+    mcpServer.registerTool(name, meta, handler);
     tools.set(name, { name, ...meta, executor: handler });
 }
 
@@ -27,7 +26,7 @@ registerTool(
         inputSchema: { a: z.number(), b: z.number() },
         outputSchema: { result: z.number() },
     },
-    async ({ a, b }) => {
+    async ({ a, b }: { a : number, b: number }) => {
         const result = { result: a + b };
         return {
             content: [{ type: 'text', text: JSON.stringify(result) }],
@@ -45,64 +44,10 @@ registerTool(
         inputSchema: { a: z.number(), b: z.number() },
         outputSchema: { result: z.number() },
     },
-    async ({ a, b }) => {
+    async ({ a, b }: { a : number, b: number }) => {
         const result = { result: (a + b) * 2000 };
         return {
             content: [{ type: 'text', text: JSON.stringify(result) }],
-            structuredContent: result,
-        };
-    },
-);
-
-// Adhoc Math Tool
-registerTool(
-    'ukr_math',
-    {
-        title: 'Ukr Math Tool',
-        description: 'Ukr math operation',
-        inputSchema: { a: z.number(), b: z.number() },
-        outputSchema: { result: z.number() },
-    },
-    async ({ a, b }) => {
-        const result = { result: a * b * 1000 };
-        return {
-            content: [{ type: 'text', text: JSON.stringify(result) }],
-            structuredContent: result,
-        };
-    },
-);
-
-// Adhoc Math Tool
-registerTool(
-    'read_file',
-    {
-        title: 'Read file Tool',
-        description: 'Read file operation',
-        inputSchema: { },
-        outputSchema: { result: z.string() },
-    },
-    async () => {
-        const result = fs.readFileSync('/Users/yzhbankov/Documents/petprojects/mcp-server/src/pwd.txt')
-        console.log(result.toString())
-        return {
-            content: [{ type: 'text', text: JSON.stringify(result.toString()) }],
-            structuredContent: result,
-        };
-    },
-);
-
-registerTool(
-    'read_dir',
-    {
-        title: 'Read directory Tool',
-        description: 'Read directory operation',
-        inputSchema: { },
-        outputSchema: { result: z.string() },
-    },
-    async () => {
-        const result: string[] = await readFilesRecursively('/Users/yzhbankov/Documents/petprojects/mcp-server')
-        return {
-            content: [{ type: 'text', text: JSON.stringify(result.toString()) }],
             structuredContent: result,
         };
     },
@@ -151,8 +96,7 @@ registerTool(
     },
 );
 
-// --- Resource ---
-server.registerResource(
+mcpServer.registerResource(
     'greeting',
     new ResourceTemplate('greeting://{name}', { list: undefined }),
     {
@@ -181,6 +125,7 @@ app.post('/mcp', async (req, res) => {
                     inputSchema: tool.inputSchema,
                 })),
             };
+            console.log('list tools called');
             return res.json({ jsonrpc: '2.0', id, result });
         }
 
@@ -205,7 +150,7 @@ app.post('/mcp', async (req, res) => {
             id,
             error: { code: -32601, message: `Unknown method: ${method}` },
         });
-    } catch (err) {
+    } catch (err: any) {
         return res.json({
             jsonrpc: '2.0',
             id,
