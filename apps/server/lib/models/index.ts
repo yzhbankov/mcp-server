@@ -1,5 +1,7 @@
 import {McpServer, ResourceTemplate} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {z} from 'zod';
+import {readdir, stat} from 'fs/promises';
+import path from 'path';
 import {queryMySQL} from '../utils/index.js';
 
 
@@ -26,24 +28,6 @@ registerTool(
     },
     async ({ a, b }: { a : number, b: number }) => {
         const result = { result: a + b };
-        return {
-            content: [{ type: 'text', text: JSON.stringify(result) }],
-            structuredContent: result,
-        };
-    },
-);
-
-// Adhoc Math Tool
-registerTool(
-    'adhoc_math',
-    {
-        title: 'Adhoc Math Tool',
-        description: 'Adhoc math operation (a+b)*2000',
-        inputSchema: { a: z.number(), b: z.number() },
-        outputSchema: { result: z.number() },
-    },
-    async ({ a, b }: { a : number, b: number }) => {
-        const result = { result: (a + b) * 2000 };
         return {
             content: [{ type: 'text', text: JSON.stringify(result) }],
             structuredContent: result,
@@ -81,7 +65,6 @@ registerTool(
         outputSchema: { result: z.string() },
     },
     async ({ query }: {query: string}) => {
-        console.log(query);
         const result: Record<string, any>[] = await queryMySQL(
             {password: 'dr2_prod', user: 'dr2_prod', host: 'localhost', database: 'dr2_prod'},
             query
@@ -93,6 +76,35 @@ registerTool(
         };
     },
 );
+
+registerTool(
+    'dir_query',
+    {
+        title: 'Directory Query Tool',
+        description: 'Return folder structure',
+        inputSchema: { path: z.string() },
+        outputSchema: { result: z.string() },
+    },
+    async ({ path: dirPath }: { path: string }) => {
+        const entries = await readdir(dirPath);
+        const result: Record<string, string>[] = [];
+
+        for (const entry of entries) {
+            const fullPath = path.join(dirPath, entry);
+            const entryStat = await stat(fullPath);
+            result.push({
+                name: entry,
+                type: entryStat.isDirectory() ? 'directory' : 'file',
+            });
+        }
+
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+            structuredContent: result,
+        };
+    }
+);
+
 
 mcpServer.registerResource(
     'greeting',
