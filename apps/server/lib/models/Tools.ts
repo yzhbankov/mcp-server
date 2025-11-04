@@ -3,6 +3,7 @@ import {readdir, stat} from 'fs/promises';
 import path from 'path';
 import {queryMySQL} from '../utils/index.js';
 import {runSystemHealthCheck} from '../utils/healthCheck.js';
+import {readLoginDocs, readGroupsDocs} from '../utils/readFile.js';
 
 
 export const tools = new Map();
@@ -109,6 +110,40 @@ registerTool(
     },
     async ({ }) => {
         const result = runSystemHealthCheck()
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+            structuredContent: result,
+        };
+    }
+);
+
+registerTool(
+    'api_login_documentation',
+    {
+        title: 'Api Login Documentation Tool',
+        description: 'Return API Login Documentation',
+        inputSchema: { },
+        outputSchema: { result: z.string() },
+    },
+    async ({ }) => {
+        const result = await readLoginDocs();
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+            structuredContent: result,
+        };
+    }
+);
+
+registerTool(
+    'api_groups_doc',
+    {
+        title: 'Api Groups Documentation Tool',
+        description: 'Return API Groups Documentation',
+        inputSchema: { },
+        outputSchema: { result: z.string() },
+    },
+    async ({ }) => {
+        const result = await readGroupsDocs();
         return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
             structuredContent: result,
