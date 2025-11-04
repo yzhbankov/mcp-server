@@ -1,5 +1,5 @@
 import express from 'express';
-import {tools} from '../../models/index.js';
+import {tools} from '../../models/Tools.js';
 
 const router = express.Router();
 

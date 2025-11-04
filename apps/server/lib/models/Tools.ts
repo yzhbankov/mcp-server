@@ -1,19 +1,13 @@
-import {McpServer, ResourceTemplate} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {z} from 'zod';
 import {readdir, stat} from 'fs/promises';
 import path from 'path';
 import {queryMySQL} from '../utils/index.js';
+import {runSystemHealthCheck} from '../utils/healthCheck.js';
 
-
-export const mcpServer = new McpServer({
-    name: 'demo-server',
-    version: '1.0.0',
-});
 
 export const tools = new Map();
 
 function registerTool(name: string, meta: any, handler: any) {
-    mcpServer.registerTool(name, meta, handler);
     tools.set(name, { name, ...meta, executor: handler });
 }
 
@@ -39,7 +33,7 @@ registerTool(
     'db_users',
     {
         title: 'DB users Tool',
-        description: 'DB users operation',
+        description: 'Database users query operation',
         inputSchema: { },
         outputSchema: { result: z.string() },
     },
@@ -60,7 +54,7 @@ registerTool(
     'sql_query',
     {
         title: 'SQL Query Tool',
-        description: 'SQL query operation',
+        description: 'Database SQL query operation',
         inputSchema: { query: z.string() },
         outputSchema: { result: z.string() },
     },
@@ -105,15 +99,19 @@ registerTool(
     }
 );
 
-
-mcpServer.registerResource(
-    'greeting',
-    new ResourceTemplate('greeting://{name}', { list: undefined }),
+registerTool(
+    'system_health_check',
     {
-        title: 'Greeting Resource',
-        description: 'Dynamic greeting generator',
+        title: 'System Health Check Tool',
+        description: 'Return system health status',
+        inputSchema: { },
+        outputSchema: { result: z.string() },
     },
-    async (uri, { name }) => ({
-        contents: [{ uri: uri.href, text: `Hello, ${name}!` }],
-    }),
+    async ({ }) => {
+        const result = runSystemHealthCheck()
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+            structuredContent: result,
+        };
+    }
 );

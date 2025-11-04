@@ -1,7 +1,7 @@
 import {processQuery} from './lib/models/queryProcessor.js';
 
 async function main() {
-    console.log('🧩 MCP + Ollama Client Ready! Type your query (or "exit").');
+    console.log('🧩 MCP + OpenAI Client Ready! Type your query (or "exit").');
     process.stdin.setEncoding('utf8');
 
     const ask = () => {

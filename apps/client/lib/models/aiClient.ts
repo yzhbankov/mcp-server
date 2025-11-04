@@ -5,7 +5,7 @@ const openai = new OpenAI({
     apiKey: config.openAIApiKey
 });
 
-export async function callChatGPT(messages: any[], tools: any[]) {
+export async function callAi(messages: any[], tools: any[]) {
     const response = await openai.chat.completions.create({
         model: 'gpt-4.1',
         messages: messages.map(m => {

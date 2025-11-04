@@ -1,6 +1,6 @@
-import {z} from 'zod';
-import {callMcp} from './mcpClient.js';
-import {callChatGPT} from './llmClient.js';
+import { z } from 'zod';
+import { callMcp } from './mcpClient.js';
+import { callAi } from './aiClient.js';
 
 const ToolSchema = z.object({
     name: z.string(),
@@ -21,7 +21,6 @@ async function getMcpTools() {
     }));
 }
 
-
 export async function processQuery(userQuery: string) {
     const tools = await getMcpTools();
 
@@ -33,16 +32,15 @@ Available tools:
 ${tools.map(t => `- ${t.function.name}: ${t.function.description}`).join('\n')}
 `;
 
-    let messages: {role: string, content: string, name?: string}[] = [
+    let messages: { role: string; content: string; name?: string }[] = [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userQuery }
+        { role: 'user', content: userQuery },
     ];
 
-    let chatResponse = await callChatGPT(messages, tools);
+    let chatResponse = await callAi(messages, tools);
 
     while (chatResponse.function_call) {
         const call = chatResponse.function_call;
-
         if (!call.name) throw new Error("Function call missing 'name'");
 
         const args = call.arguments ? JSON.parse(call.arguments) : {};
@@ -57,7 +55,7 @@ ${tools.map(t => `- ${t.function.name}: ${t.function.description}`).join('\n')}
 
         messages.push({ role: 'function', name: call.name, content: toolText });
 
-        chatResponse = await callChatGPT(messages, tools);
+        chatResponse = await callAi(messages, tools);
     }
 
     return chatResponse.content || 'No response.';
