@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import nodemailer from 'nodemailer';
 import {readdir, stat} from 'fs/promises';
 import path from 'path';
 import {queryMySQL} from '../utils/index.js';
@@ -148,5 +149,48 @@ registerTool(
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
             structuredContent: result,
         };
+    }
+);
+
+registerTool(
+    'send_email',
+    {
+        title: 'Send Email Tool',
+        description: 'Send email using SMTP via Nodemailer',
+        inputSchema: {
+            to: z.string().email(),
+            subject: z.string(),
+            content: z.string(),
+        },
+        outputSchema: { result: z.string() },
+    },
+    async ({
+               to,
+               subject,
+               content,
+           }: {
+        to: string;
+        subject: string;
+        content: string;
+    }) => {
+        try {
+            // Load SMTP config from server config or default to localhost Postfix
+            const smtpUrl = 'smtp://localhost:25';
+
+            const transporter = nodemailer.createTransport(smtpUrl);
+
+            const mailOptions = {
+                from: 'lab@redpointpositioning.com',
+                to,
+                subject,
+                text: content,
+            };
+
+            await transporter.sendMail(mailOptions);
+
+            return { result: 'Email sent successfully' };
+        } catch (error: any) {
+            return { result: `Error sending email: ${error.message}` };
+        }
     }
 );
