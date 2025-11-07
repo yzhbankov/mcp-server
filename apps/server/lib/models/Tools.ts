@@ -160,18 +160,18 @@ registerTool(
         inputSchema: {
             to: z.string().email(),
             subject: z.string(),
-            content: z.string(),
+            text: z.string(),
         },
         outputSchema: { result: z.string() },
     },
     async ({
                to,
                subject,
-               content,
+               text,
            }: {
         to: string;
         subject: string;
-        content: string;
+        text: string;
     }) => {
         try {
             // Load SMTP config from server config or default to localhost Postfix
@@ -183,7 +183,7 @@ registerTool(
                 from: 'lab@redpointpositioning.com',
                 to,
                 subject,
-                text: content,
+                text,
             };
 
             await transporter.sendMail(mailOptions);
