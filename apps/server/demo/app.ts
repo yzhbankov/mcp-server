@@ -1,6 +1,6 @@
 import express, {Express} from 'express';
 import bodyParser from 'body-parser';
-import v1Router from './v1/router.js';
+import v1Router from './router.js';
 
 let server: null | ReturnType<Express['listen']> = null;
 export const app = express();

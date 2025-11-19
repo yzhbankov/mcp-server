@@ -7,7 +7,7 @@
     "npm": ">=11.6.2"
   },
   "scripts": {
-    "start": "tsx app.ts"
+    "start": "tsx ./demo/app.ts"
   },
   "dependencies": {
     "@types/nodemailer": "^7.0.3",
