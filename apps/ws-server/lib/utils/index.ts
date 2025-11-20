@@ -34,3 +34,11 @@ export async function readFilesRecursively(dir: string): Promise<string[]> {
     );
     return files.flat();
 }
+
+export function parseSafe(msgRaw: string): any | null {
+    try {
+        return JSON.parse(msgRaw);
+    } catch(e) {
+        return null;
+    }
+}
