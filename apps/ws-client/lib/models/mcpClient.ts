@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import { v4 as uuidv4 } from 'uuid';
-import {config} from '../config.js';
+import { config } from '../config.js';
 
 let ws: WebSocket | null = null;
 let connected = false;
@@ -29,25 +29,34 @@ async function ensureConnected(): Promise<void> {
         if (msg.id && pending.has(msg.id)) {
             pending.get(msg.id)!(msg);
             pending.delete(msg.id);
+            return;
         }
     });
 
     const initMsg = {
-        type: "initialize",
-        client: { name: "openai-client", version: "1.0.0" },
-        protocolVersion: "2024-11-05"
+        jsonrpc: "2.0",
+        id: uuidv4(),
+        method: "initialize",
+        params: {
+            clientInfo: { name: "openai-client", version: "1.0.0" },
+            protocolVersion: "2024-11-05",
+            capabilities: {}
+        }
     };
+
     ws.send(JSON.stringify(initMsg));
 
     await new Promise<void>((resolve) => {
         const handler = (raw: any) => {
             const msg = JSON.parse(raw.toString());
-            if (msg.type === "initialized") {
+
+            if (msg.method === "notifications/initialized") {
                 ws!.off("message", handler);
                 connected = true;
                 resolve();
             }
         };
+
         ws!.on("message", handler);
     });
 
@@ -68,23 +77,36 @@ export async function callMcp(action: "list_tools" | "call_tool", params: any = 
     const id = uuidv4();
 
     if (action === "list_tools") {
-        const res = await send({ type: "tools", id });
-        return { tools: res.tools || [] };
+        const res = await send({
+            jsonrpc: "2.0",
+            id,
+            method: "tools/list",
+            params: {}
+        });
+
+        if (res.error) {
+            throw new Error(res.error.message);
+        }
+
+        return res.result;
     }
 
     if (action === "call_tool") {
         const res = await send({
-            type: "call_tool",
+            jsonrpc: "2.0",
             id,
-            tool: params.name,
-            input: params.arguments
+            method: "tools/call",
+            params: {
+                name: params.name,
+                arguments: params.arguments
+            }
         });
 
         if (res.error) {
-            throw new Error(res.error);
+            throw new Error(res.error.message);
         }
 
-        return res.output;
+        return res.result;
     }
 
     throw new Error("Unknown MCP action: " + action);

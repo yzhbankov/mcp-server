@@ -1,66 +1,94 @@
-import {WebSocket} from 'ws';
-import {tools} from '../models/Tools.js';
+import { WebSocket } from 'ws';
+import { tools } from '../models/Tools.js';
 
-function handleInitialize(msg: Record<string, any>, client: WebSocket) {
+function sendResult(client: WebSocket, id: string, result: any) {
     client.send(JSON.stringify({
-        type: 'initialized',
-        server: { name: 'typescript-mcp-server', version: '0.1.0' },
-        protocolVersion: msg.protocolVersion
-    }));
-}
-
-function handleToolList(msg: Record<string, any>, client: WebSocket) {
-    const id = msg.id;
-
-    client.send(JSON.stringify({
+        jsonrpc: "2.0",
         id,
-        type: 'tools',
-        tools: Array.from(tools.values()).map(t => ({
-            name: t.name,
-            description: t.description,
-            inputSchema: t.inputSchema,
-            outputSchema: t.outputSchema
-        }))
+        result
     }));
 }
 
-async function handleCallTool(msg: Record<string, any>, client: WebSocket) {
-    const { id, tool: toolName } = msg;
+function sendError(client: WebSocket, id: any, code: number, message: string) {
+    client.send(JSON.stringify({
+        jsonrpc: "2.0",
+        id,
+        error: { code, message }
+    }));
+}
+
+function handleInitialize(msg: any, client: WebSocket) {
+    sendResult(client, msg.id, {
+        protocolVersion: "2024-11-05",
+        serverInfo: {
+            name: "typescript-mcp-server",
+            version: "0.1.0"
+        },
+        capabilities: {
+            tools: {} // means server supports tools/list and tools/call
+        }
+    });
+
+    client.send(JSON.stringify({
+        jsonrpc: "2.0",
+        method: "notifications/initialized",
+        params: {}
+    }));
+}
+
+function handleToolList(msg: any, client: WebSocket) {
+    const toolList = Array.from(tools.values()).map(t => ({
+        name: t.name,
+        description: t.description,
+        inputSchema: t.inputSchema,
+        outputSchema: t.outputSchema
+    }));
+
+    sendResult(client, msg.id, {
+        tools: toolList,
+        nextCursor: null
+    });
+}
+
+async function handleCallTool(msg: any, client: WebSocket) {
+    const { name: toolName, arguments: args } = msg.params ?? {};
     const tool = tools.get(toolName);
 
     if (!tool) {
-        client.send(JSON.stringify({ type: 'tool_result', id, error: 'Tool not found' }));
+        sendError(client, msg.id, -32601, `Tool "${toolName}" not found`);
         return;
     }
 
     try {
-        const output = await tool.execute(msg.input);
-        client.send(JSON.stringify({ type: 'tool_result', id, output }));
+        const output = await tool.execute(args);
+        sendResult(client, msg.id, { output });
     } catch (err: any) {
-        client.send(JSON.stringify({ type: 'tool_result', id, error: err?.message ?? 'Unknown error' }));
+        sendError(client, msg.id, -32000, err?.message ?? "Unknown tool error");
     }
 }
 
-export default async function controller(msg: Record<string, any>, client: WebSocket) {
-    if (!msg) {
-        client.send(JSON.stringify({ type: 'error', error: 'Invalid JSON' }));
+export default async function controller(msg: any, client: WebSocket) {
+    if (!msg || msg.jsonrpc !== "2.0") {
+        sendError(client, null, -32700, "Invalid JSON-RPC format");
         return;
     }
 
-    switch (msg.type) {
-        case 'initialize':
+    const { method } = msg;
+
+    switch (method) {
+        case "initialize":
             handleInitialize(msg, client);
             break;
 
-        case 'tools':
+        case "tools/list":
             handleToolList(msg, client);
             break;
 
-        case 'call_tool':
+        case "tools/call":
             await handleCallTool(msg, client);
             break;
 
         default:
-            client.send(JSON.stringify({ type: 'error', error: 'Unknown message type' }));
+            sendError(client, msg.id, -32601, `Unknown method: ${method}`);
     }
 }
