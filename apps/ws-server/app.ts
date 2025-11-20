@@ -1,17 +1,16 @@
 import {WebSocketServer} from 'ws';
-import {tools} from './Tools.js';
+import {tools} from './lib/models/Tools.js';
+import {config} from './lib/config.js';
 
 
-const PORT = Number(process.env.PORT) || 8080;
-const wss = new WebSocketServer({ port: PORT });
+const wss = new WebSocketServer({ port: config.serverPort });
 
-console.log(`MCP WebSocket server running on ws://localhost:${PORT}`);
+console.log(`MCP WebSocket server running on ws://localhost:${config.serverPort}`);
 
 wss.on('connection', (ws) => {
     console.log('Client connected');
 
     ws.on('message', async (raw) => {
-        console.log(raw.toString());
         let msg: any;
         try {
             msg = JSON.parse(raw.toString());
@@ -20,7 +19,6 @@ wss.on('connection', (ws) => {
             return;
         }
 
-        // ------------------ initialize ------------------
         if (msg.type === 'initialize') {
             ws.send(JSON.stringify({
                 type: 'initialized',
@@ -30,7 +28,6 @@ wss.on('connection', (ws) => {
             return;
         }
 
-        // ------------------ list tools ------------------
         if (msg.type === 'tools') {
             const id = msg.id;
             ws.send(JSON.stringify({
@@ -46,7 +43,6 @@ wss.on('connection', (ws) => {
             return;
         }
 
-        // ------------------ call_tool ------------------
         if (msg.type === 'call_tool') {
             const id = msg.id;
             const toolName = msg.tool;
@@ -66,7 +62,6 @@ wss.on('connection', (ws) => {
             return;
         }
 
-        // ------------------ Unknown ------------------
         ws.send(JSON.stringify({ type: 'error', error: 'Unknown message type' }));
     });
 

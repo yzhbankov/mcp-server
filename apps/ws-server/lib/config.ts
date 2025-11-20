@@ -9,11 +9,9 @@ dotenv.config({ path: path.join(__dirname, '../.env.defaults') });
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 type ConfigType = {
-    serverUrl: string;
-    openAIApiKey: string;
+    serverPort: number;
 };
 
 export const config: ConfigType = {
-    serverUrl: process.env.MCP_SERVER_URL || 'http://localhost:3000',
-    openAIApiKey: process.env.OPEN_AI_API_KEY || '',
+    serverPort: Number(process.env.SERVER_PORT) || 8080,
 };

@@ -1,15 +1,16 @@
-import WebSocket from "ws";
+import WebSocket from 'ws';
+import { v4 as uuidv4 } from 'uuid';
+import {config} from '../config.js';
 
 let ws: WebSocket | null = null;
 let connected = false;
-let messageId = 1;
 
 const pending = new Map<string, (msg: any) => void>();
 
 async function ensureConnected(): Promise<void> {
     if (connected && ws) return;
 
-    ws = new WebSocket("ws://localhost:8080");
+    ws = new WebSocket(config.serverUrl);
 
     await new Promise<void>((resolve, reject) => {
         ws!.once("open", resolve);
@@ -31,7 +32,6 @@ async function ensureConnected(): Promise<void> {
         }
     });
 
-    // Initialize according to MCP protocol
     const initMsg = {
         type: "initialize",
         client: { name: "openai-client", version: "1.0.0" },
@@ -65,7 +65,7 @@ function send(msg: any): Promise<any> {
 
 export async function callMcp(action: "list_tools" | "call_tool", params: any = {}) {
     await ensureConnected();
-    const id = `msg-${messageId++}`;
+    const id = uuidv4();
 
     if (action === "list_tools") {
         const res = await send({ type: "tools", id });

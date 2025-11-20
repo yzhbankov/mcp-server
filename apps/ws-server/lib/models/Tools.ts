@@ -1,9 +1,9 @@
 import {readdir, stat} from 'fs/promises';
 import nodemailer from 'nodemailer';
 import path from 'path';
-import {queryMySQL} from './utils/index.js';
-import {runSystemHealthCheck} from './utils/healthCheck.js';
-import {readLoginDocs, readGroupsDocs} from './utils/readFile.js';
+import {queryMySQL} from '../utils/index.js';
+import {runSystemHealthCheck} from '../utils/healthCheck.js';
+import {readLoginDocs, readGroupsDocs} from '../utils/readFile.js';
 
 export const tools = new Map<string, ToolDefinition>();
 
