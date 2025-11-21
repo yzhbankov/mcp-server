@@ -42,7 +42,7 @@ MCP Server is a modular, extensible Node.js backend designed to orchestrate and 
 
 ## Setup & Running
 1. **Configure API Keys:**
-   - Create `apps/ws-client/.env` and add your `OPEN_AI_API_KEY` value.
+   - Create `apps/client/.env` and add your `OPEN_AI_API_KEY` value.
 
 2. **Start MCP Server:**
    - `yarn start:server`

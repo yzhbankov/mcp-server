@@ -1,76 +1,92 @@
-import {z} from 'zod';
-import nodemailer from 'nodemailer';
 import {readdir, stat} from 'fs/promises';
+import nodemailer from 'nodemailer';
 import path from 'path';
 import {queryMySQL} from '../utils/index.js';
 import {runSystemHealthCheck} from '../utils/healthCheck.js';
 import {readLoginDocs, readGroupsDocs} from '../utils/readFile.js';
 
+export const tools = new Map<string, ToolDefinition>();
 
-export const tools = new Map();
+type ToolDefinition = {
+    name: string;
+    description?: string;
+    inputSchema?: any;
+    outputSchema?: any;
+    execute: (input: any) => Promise<any>;
+};
 
 function registerTool(name: string, meta: any, handler: any) {
-    tools.set(name, { name, ...meta, executor: handler });
+    tools.set(name, { name, ...meta, execute: handler });
 }
 
-// Addition Tool
 registerTool(
     'add',
     {
         title: 'Addition Tool',
         description: 'Add two numbers',
-        inputSchema: { a: z.number(), b: z.number() },
-        outputSchema: { result: z.number() },
+        inputSchema: {
+            type: 'object',
+            properties: {
+                a: { type: 'number' },
+                b: { type: 'number' }
+            },
+            required: ['a', 'b']
+        },
+        outputSchema: {
+            type: 'object',
+            properties: { result: { type: 'number' } },
+            required: ['result']
+        }
     },
-    async ({ a, b }: { a : number, b: number }) => {
+    async ({ a, b }: { a: number; b: number }) => {
         const result = { result: a + b };
         return {
-            content: [{ type: 'text', text: JSON.stringify(result) }],
-            structuredContent: result,
+            content: [{ type: 'text', text: JSON.stringify(result) }]
         };
-    },
+    }
 );
 
 registerTool(
     'db_users',
     {
-        title: 'DB users Tool',
+        title: 'DB Users Tool',
         description: 'Database users query operation',
-        inputSchema: { },
-        outputSchema: { result: z.string() },
+        inputSchema: { type: 'object', properties: {} },
+        outputSchema: { type: 'array', items: { type: 'object' } }
     },
     async () => {
-        const result: Record<string, any>[] = await queryMySQL(
-            {password: 'dr2_prod', user: 'dr2_prod', host: 'localhost', database: 'dr2_prod'},
+        const result = await queryMySQL(
+            { password: 'dr2_prod', user: 'dr2_prod', host: 'localhost', database: 'dr2_prod' },
             'SELECT uid, email, role, created_at, updated_at, last_sign_in_at FROM users'
-        )
+        );
 
         return {
-            content: [{ type: 'text', text: JSON.stringify(result.map(obj => JSON.stringify(obj))) }],
-            structuredContent: result,
+            content: [{ type: 'text', text: JSON.stringify(result) }],
         };
-    },
+    }
 );
 
 registerTool(
     'sql_query',
     {
         title: 'SQL Query Tool',
-        description: 'Database SQL query operation',
-        inputSchema: { query: z.string() },
-        outputSchema: { result: z.string() },
+        description: 'Execute SQL query',
+        inputSchema: {
+            type: 'object',
+            properties: { query: { type: 'string' } },
+            required: ['query']
+        },
+        outputSchema: { type: 'array', items: { type: 'object' } }
     },
-    async ({ query }: {query: string}) => {
-        const result: Record<string, any>[] = await queryMySQL(
-            {password: 'dr2_prod', user: 'dr2_prod', host: 'localhost', database: 'dr2_prod'},
+    async ({ query }: { query: string }) => {
+        const result = await queryMySQL(
+            { password: 'dr2_prod', user: 'dr2_prod', host: 'localhost', database: 'dr2_prod' },
             query
-        )
-
+        );
         return {
-            content: [{ type: 'text', text: JSON.stringify(result.map(obj => JSON.stringify(obj))) }],
-            structuredContent: result,
+            content: [{ type: 'text', text: JSON.stringify(result) }],
         };
-    },
+    }
 );
 
 registerTool(
@@ -78,25 +94,37 @@ registerTool(
     {
         title: 'Directory Query Tool',
         description: 'Return folder structure',
-        inputSchema: { path: z.string() },
-        outputSchema: { result: z.string() },
+        inputSchema: {
+            type: 'object',
+            properties: { path: { type: 'string' } },
+            required: ['path']
+        },
+        outputSchema: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    name: { type: 'string' },
+                    type: { type: 'string', enum: ['directory', 'file'] }
+                }
+            }
+        }
     },
     async ({ path: dirPath }: { path: string }) => {
         const entries = await readdir(dirPath);
-        const result: Record<string, string>[] = [];
+        const result = [];
 
         for (const entry of entries) {
             const fullPath = path.join(dirPath, entry);
             const entryStat = await stat(fullPath);
             result.push({
                 name: entry,
-                type: entryStat.isDirectory() ? 'directory' : 'file',
+                type: entryStat.isDirectory() ? 'directory' : 'file'
             });
         }
 
         return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            structuredContent: result,
         };
     }
 );
@@ -106,14 +134,13 @@ registerTool(
     {
         title: 'System Health Check Tool',
         description: 'Return system health status',
-        inputSchema: { },
-        outputSchema: { result: z.string() },
+        inputSchema: { type: 'object', properties: {} },
+        outputSchema: { type: 'object' }
     },
-    async ({ }) => {
-        const result = runSystemHealthCheck()
+    async () => {
+        const result = runSystemHealthCheck();
         return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            structuredContent: result,
         };
     }
 );
@@ -121,16 +148,15 @@ registerTool(
 registerTool(
     'api_login_documentation',
     {
-        title: 'Api Login Documentation Tool',
-        description: 'Return API Login Documentation',
-        inputSchema: { },
-        outputSchema: { result: z.string() },
+        title: 'API Login Documentation Tool',
+        description: 'Return API login documentation',
+        inputSchema: { type: 'object', properties: {} },
+        outputSchema: { type: 'object' }
     },
-    async ({ }) => {
+    async () => {
         const result = await readLoginDocs();
         return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            structuredContent: result,
         };
     }
 );
@@ -138,16 +164,15 @@ registerTool(
 registerTool(
     'api_groups_doc',
     {
-        title: 'Api Groups Documentation Tool',
+        title: 'API Groups Documentation Tool',
         description: 'Return API Groups Documentation',
-        inputSchema: { },
-        outputSchema: { result: z.string() },
+        inputSchema: { type: 'object', properties: {} },
+        outputSchema: { type: 'object' }
     },
-    async ({ }) => {
+    async () => {
         const result = await readGroupsDocs();
         return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            structuredContent: result,
         };
     }
 );
@@ -158,23 +183,22 @@ registerTool(
         title: 'Send Email Tool',
         description: 'Send email using SMTP via Nodemailer',
         inputSchema: {
-            to: z.string().email(),
-            subject: z.string(),
-            text: z.string(),
+            type: 'object',
+            properties: {
+                to: { type: 'string', format: 'email' },
+                subject: { type: 'string' },
+                text: { type: 'string' }
+            },
+            required: ['to', 'subject', 'text']
         },
-        outputSchema: { result: z.string() },
+        outputSchema: {
+            type: 'object',
+            properties: { result: { type: 'string' } },
+            required: ['result']
+        }
     },
-    async ({
-               to,
-               subject,
-               text,
-           }: {
-        to: string;
-        subject: string;
-        text: string;
-    }) => {
+    async ({ to, subject, text }: {to: string, subject: string, text: string}) => {
         try {
-            // Load SMTP config from server config or default to localhost Postfix
             const smtpUrl = 'smtp://localhost:25';
 
             const transporter = nodemailer.createTransport(smtpUrl);
@@ -183,7 +207,7 @@ registerTool(
                 from: 'lab@redpointpositioning.com',
                 to,
                 subject,
-                text,
+                text
             };
 
             await transporter.sendMail(mailOptions);

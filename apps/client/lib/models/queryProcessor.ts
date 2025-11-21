@@ -1,62 +1,58 @@
-import { z } from 'zod';
-import { callMcp } from './mcpClient.js';
-import { callAi } from './aiClient.js';
+import {callMcp} from './mcpClient.js';
+import {callAi, Message, Tool} from './aiClient.js';
 
-const ToolSchema = z.object({
-    name: z.string(),
-    description: z.string(),
-    inputSchema: z.object({})
-});
+type ToolSchema = {
+    name: string,
+    description: string,
+    inputSchema: Record<string, any>
+};
 
-async function getMcpTools() {
-    const toolsData = await callMcp('list_tools');
-    const tools = z.array(ToolSchema).parse(toolsData.tools || []);
-    return tools.map(tool => ({
-        type: 'function',
+async function getMcpTools(): Promise<Tool[]> {
+    const toolsData = await callMcp("tools/list");
+
+    return toolsData.tools.map((t: ToolSchema) => ({
+        type: "function",
         function: {
-            name: tool.name,
-            description: tool.description,
-            parameters: tool.inputSchema
+            name: t.name,
+            description: t.description,
+            parameters: t.inputSchema || {}
         }
     }));
 }
 
 export async function processQuery(userQuery: string) {
-    const tools = await getMcpTools();
+    const tools: Tool[] = await getMcpTools();
 
     const systemPrompt = `
-You are an intelligent assistant connected to a tool system (MCP).
-You can call one of the following tools by responding in JSON format.
-
+You are an intelligent assistant connected to a tool system.
+When appropriate, call a tool using a JSON function call.
 Available tools:
-${tools.map(t => `- ${t.function.name}: ${t.function.description}`).join('\n')}
-`;
+${tools.map((t: Tool) => `- ${t.function.name}: ${t.function.description}`).join("\n")}
+    `;
 
-    let messages: { role: string; content: string; name?: string }[] = [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userQuery },
+    let messages: Message[] = [
+        { role: "assistant", content: systemPrompt, name: "system" },
+        { role: "user", content: userQuery, name: 'user' }
     ];
+    let response = await callAi(messages, tools);
 
-    let chatResponse = await callAi(messages, tools);
+    while (response?.tool_calls?.length) {
+        for (const call of response.tool_calls) {
+            const { name, arguments: argStr } = call.function;
+            const args = argStr ? JSON.parse(argStr) : {};
 
-    while (chatResponse.function_call) {
-        const call = chatResponse.function_call;
-        if (!call.name) throw new Error("Function call missing 'name'");
+            const toolResult = await callMcp("tools/call", { name, arguments: args });
 
-        const args = call.arguments ? JSON.parse(call.arguments) : {};
+            messages.push({
+                role: "function",
+                name,
+                content: JSON.stringify(toolResult)
+            });
+        }
 
-        const result = await callMcp('call_tool', { name: call.name, arguments: args });
-
-        const toolText =
-            result.content?.[0]?.text ||
-            (result.structuredContent?.data
-                ? Buffer.from(result.structuredContent.data).toString('utf8')
-                : JSON.stringify(result));
-
-        messages.push({ role: 'function', name: call.name, content: toolText });
-
-        chatResponse = await callAi(messages, tools);
+        // Ask the AI again with updated messages
+        response = await callAi(messages, tools);
     }
 
-    return chatResponse.content || 'No response.';
+    return response.content ?? "No response.";
 }

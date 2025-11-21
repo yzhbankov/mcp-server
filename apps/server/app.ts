@@ -1,39 +1,20 @@
-import * as RestApi from './lib/restApi/index.js';
+import {WebSocketServer} from 'ws';
+import controller from './lib/controller/index.js';
 import {config} from './lib/config.js';
+import {parseSafe} from './lib/utils/index.js';
 
-export async function main(): Promise<void> {
-    RestApi.startServer({
-        serverPort: config.serverPort,
+const wss = new WebSocketServer({ port: config.serverPort });
+
+console.log(`MCP WebSocket server running on ws://localhost:${config.serverPort}`);
+
+
+wss.on('connection', (ws) => {
+    console.log('Client connected');
+
+    ws.on('message', async (raw) => {
+        const msg = parseSafe(raw.toString());
+        await controller(msg, ws);
     });
 
-    // Add Global Unhandled Errors Handlers
-    async function exit() {
-        await RestApi.stopServer();
-        console.log('Exit');
-        process.exit(0);
-    }
-
-    process.on('SIGTERM', async () => {
-        console.error('SIGTERM signal caught');
-        await exit();
-    });
-
-    process.on('SIGINT', async () => {
-        console.error('SIGINT signal caught');
-        await exit();
-    });
-
-    process.on('unhandledRejection', (error: Error) => {
-        console.error('unhandledRejection', error.stack);
-    });
-
-    process.on('uncaughtException', (error: Error) => {
-        console.error('uncaughtException', error.stack);
-    });
-}
-
-main().catch((err) => {
-    console.error(err);
-
-    process.exit(1);
+    ws.on('close', () => console.log('Client disconnected'));
 });

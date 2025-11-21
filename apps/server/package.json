@@ -7,20 +7,19 @@
     "npm": ">=11.6.2"
   },
   "scripts": {
-    "start": "tsx ./demo/app.ts"
+    "start": "tsx app.ts"
   },
   "dependencies": {
-    "@types/nodemailer": "^7.0.3",
+    "ajv": "^8.17.1",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
     "mysql2": "^3.15.3",
     "nodemailer": "^7.0.10",
-    "zod": "^4.1.12"
+    "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@types/axios": "^0.14.4",
-    "@types/express": "^5.0.5",
+    "@types/nodemailer": "^7.0.3",
     "@types/node": "^24.9.1",
+    "@types/ws": "^8.18.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },

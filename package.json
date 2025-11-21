@@ -7,8 +7,8 @@
     "npm": ">=11.6.2"
   },
   "scripts": {
-    "start:server": "cd apps/ws-server && yarn start",
-    "start:client": "cd apps/ws-client && yarn start"
+    "start:server": "cd apps/server && yarn start",
+    "start:client": "cd apps/client && yarn start"
   },
   "repository": {
     "type": "git",
