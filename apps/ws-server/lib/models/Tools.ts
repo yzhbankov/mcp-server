@@ -41,8 +41,7 @@ registerTool(
     async ({ a, b }: { a: number; b: number }) => {
         const result = { result: a + b };
         return {
-            content: [{ type: 'text', text: JSON.stringify(result) }],
-            structuredContent: result
+            content: [{ type: 'text', text: JSON.stringify(result) }]
         };
     }
 );
@@ -63,7 +62,6 @@ registerTool(
 
         return {
             content: [{ type: 'text', text: JSON.stringify(result) }],
-            structuredContent: result
         };
     }
 );
@@ -87,7 +85,6 @@ registerTool(
         );
         return {
             content: [{ type: 'text', text: JSON.stringify(result) }],
-            structuredContent: result
         };
     }
 );
@@ -128,7 +125,6 @@ registerTool(
 
         return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            structuredContent: result
         };
     }
 );
@@ -145,7 +141,6 @@ registerTool(
         const result = runSystemHealthCheck();
         return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            structuredContent: result
         };
     }
 );
@@ -162,7 +157,6 @@ registerTool(
         const result = await readLoginDocs();
         return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            structuredContent: result
         };
     }
 );
@@ -179,7 +173,6 @@ registerTool(
         const result = await readGroupsDocs();
         return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            structuredContent: result
         };
     }
 );

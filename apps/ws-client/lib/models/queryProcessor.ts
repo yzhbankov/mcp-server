@@ -8,7 +8,7 @@ type ToolSchema = {
 };
 
 async function getMcpTools(): Promise<Tool[]> {
-    const toolsData = await callMcp("list_tools");
+    const toolsData = await callMcp("tools/list");
 
     return toolsData.tools.map((t: ToolSchema) => ({
         type: "function",
@@ -41,7 +41,7 @@ ${tools.map((t: Tool) => `- ${t.function.name}: ${t.function.description}`).join
             const { name, arguments: argStr } = call.function;
             const args = argStr ? JSON.parse(argStr) : {};
 
-            const toolResult = await callMcp("call_tool", { name, arguments: args });
+            const toolResult = await callMcp("tools/call", { name, arguments: args });
 
             messages.push({
                 role: "function",

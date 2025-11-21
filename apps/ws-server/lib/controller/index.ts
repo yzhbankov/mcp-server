@@ -1,5 +1,5 @@
-import { WebSocket } from 'ws';
-import { tools } from '../models/Tools.js';
+import {WebSocket} from 'ws';
+import {tools} from '../models/Tools.js';
 
 function sendResult(client: WebSocket, id: string, result: any) {
     client.send(JSON.stringify({
@@ -25,7 +25,10 @@ function handleInitialize(msg: any, client: WebSocket) {
             version: "0.1.0"
         },
         capabilities: {
-            tools: {} // means server supports tools/list and tools/call
+            tools: {
+                list: true,
+                call: true
+            }
         }
     });
 

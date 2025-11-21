@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
-import { v4 as uuidv4 } from 'uuid';
-import { config } from '../config.js';
+import {v4 as uuidv4} from 'uuid';
+import {config} from '../config.js';
 
 let ws: WebSocket | null = null;
 let connected = false;
@@ -39,7 +39,7 @@ async function ensureConnected(): Promise<void> {
         method: "initialize",
         params: {
             clientInfo: { name: "openai-client", version: "1.0.0" },
-            protocolVersion: "2024-11-05",
+            protocolVersion: "2024-10-14",
             capabilities: {}
         }
     };
@@ -72,11 +72,11 @@ function send(msg: any): Promise<any> {
     });
 }
 
-export async function callMcp(action: "list_tools" | "call_tool", params: any = {}) {
+export async function callMcp(action: "tools/list" | "tools/call", params: any = {}) {
     await ensureConnected();
     const id = uuidv4();
 
-    if (action === "list_tools") {
+    if (action === "tools/list") {
         const res = await send({
             jsonrpc: "2.0",
             id,
@@ -91,7 +91,7 @@ export async function callMcp(action: "list_tools" | "call_tool", params: any = 
         return res.result;
     }
 
-    if (action === "call_tool") {
+    if (action === "tools/call") {
         const res = await send({
             jsonrpc: "2.0",
             id,
