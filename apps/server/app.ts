@@ -12,6 +12,7 @@ wss.on('connection', (ws) => {
     console.log('Client connected');
 
     ws.on('message', async (raw) => {
+        console.log('Received message:', raw.toString());
         const msg = parseSafe(raw.toString());
         await controller(msg, ws);
     });
