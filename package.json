@@ -1,6 +1,7 @@
 {
   "name": "mcp-server",
   "version": "1.0.0",
+  "description": "Production-ready Model Context Protocol (MCP) server implementing JSON-RPC 2.0 over WebSocket for AI tool orchestration",
   "type": "module",
   "engines": {
     "node": ">=25.0.0",
@@ -14,6 +15,22 @@
     "type": "git",
     "url": "https://github.com/yzhbankov/mcp-server.git"
   },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "json-rpc",
+    "websocket",
+    "ai",
+    "openai",
+    "gpt",
+    "automation",
+    "tool-orchestration",
+    "typescript"
+  ],
+  "author": {
+    "name": "Dr. Zhbankov Yaroslav",
+    "url": "https://github.com/yzhbankov"
+  },
   "workspaces": [
     "apps/server",
     "apps/client"
@@ -25,5 +42,5 @@
   "devDependencies": {
     "tsx": "^4.20.6"
   },
-  "license": "UNLICENSED"
+  "license": "MIT"
 }

@@ -1,6 +1,7 @@
 {
   "name": "mcp-server",
   "version": "1.0.0",
+  "description": "WebSocket-based MCP server with pluggable tool registry for AI orchestration",
   "type": "module",
   "engines": {
     "node": ">=25.0.0",
@@ -24,5 +25,5 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
-  "license": "UNLICENSED"
+  "license": "MIT"
 }

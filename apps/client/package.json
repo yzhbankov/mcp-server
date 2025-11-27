@@ -20,5 +20,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
-  "license": "UNLICENSED"
+  "license": "MIT",
+  "description": "Interactive CLI client for MCP Server with OpenAI GPT-4 integration"
 }
